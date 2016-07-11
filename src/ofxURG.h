@@ -7,7 +7,7 @@ extern "C"{
     #include "urg_sensor.h"
 }
 
-class ofxURG{
+class ofxURG: private ofThread{
 public:
     struct Data{
         float degrees;
@@ -15,19 +15,30 @@ public:
     };
 
     ofxURG();
+    ~ofxURG();
 
     void setup(std::string port="/dev/ttyACM0");
-    void update();
+
+    void setAngleMinMax(float min, float max);
+    void setStepSize(int step);
+
+    int getStepSize();
+
     void drawRadius();
 
     std::vector<Data> data;
 
 private:
+    void update(ofEventArgs& args);
+    void threadedFunction() override;
+
     void readSensorCapabilities();
     void printLastError();
     bool checkError(int ret);
 
     std::vector<long> dataRaw;
+    std::vector<Data> dataThread;
+    std::vector<Data> dataExchange;
 
     urg_t urg;
 
@@ -36,5 +47,6 @@ private:
 
     long lastTimeStamp;
 };
+
 
 #endif // OFXURG_H
