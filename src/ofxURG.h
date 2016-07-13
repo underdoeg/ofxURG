@@ -4,73 +4,89 @@
 #include "ofMain.h"
 
 extern "C"{
-    #include "urg_sensor.h"
+#include "urg_sensor.h"
 }
 
 class ofxURG: private ofThread{
 public:
-    class Data{
-    public:
-        ofVec2f getPosition(){
-            float rad = ofDegToRad(degrees);
-            return ofVec2f(cos(rad)*distance, sin(rad)*distance);
-        };
+	class Data{
+	public:
+		ofVec2f getPosition(){
+			float rad = ofDegToRad(degrees);
+			return ofVec2f(cos(rad)*distance, sin(rad)*distance);
+		}
 
-        float degrees;
-        long distance;
-    };
+		void setPosition(ofVec2f p){
+			degrees = ofRadToDeg(atan2f(p.y, p.x));
+			distance = long(p.length());
+		}
 
-    ofxURG();
-    ~ofxURG();
+		double degrees;
+		long distance;
+	};
 
-    void setup(std::string port="");
+	ofxURG();
+	virtual ~ofxURG();
 
-    void start();
-    void stop();
+	void setup(std::string port="");
 
-    bool isRunning();
+	void start();
+	void stop();
 
-    void setAngleMinMax(float min, float max);
-    void setStepSize(int step);
+	bool isRunning();
 
-    int getStepSize();
+	void setAngleMinMax(float min, float max);
+	void setStepSize(int step);
 
-    void drawRadius();
+	int getStepSize();
 
-    std::vector<Data> getData();
+	void drawRadius();
 
-    ofEvent<std::vector<Data>> onNewDataThread;
+	std::vector<Data> getData();
+	std::vector<Data> getDataRaw();
+
+	void setROI(ofRectangle rect);
+	void setROI(ofVec2f a, ofVec2f b, ofVec2f c, ofVec2f d);
+	void setROI(ofPolyline poly);
+
+	ofPolyline getROI();
+
+	ofEvent<std::vector<Data>> onNewDataThread;
 
 private:
 
-    void setupInternal(std::string port);
+	void setupInternal(std::string port);
 
-    void update(ofEventArgs& args);
+	void update(ofEventArgs& args);
 
-    void newDataThread(std::vector<Data>& data);
-    void threadedFunction() override;
+	void drawDataRadial(const std::vector<Data>& data, float scale=1.f);
 
-    void readSensorCapabilities();
-    void printLastError();
-    bool checkError(int ret);
+	void newDataThread(std::vector<Data>& data);
+	void threadedFunction() override;
 
-    std::vector<long> dataRaw;
-    std::vector<Data> dataThread;
-    std::vector<Data> dataExchange;
+	void readSensorCapabilities();
+	void printLastError();
+	bool checkError(int ret);
 
-    bool bNewData;
+	std::vector<long> dataRaw;
+	std::vector<Data> dataThread;
+	std::vector<Data> dataExchange;
 
-    urg_t urg;
+	bool bNewData;
 
-    long minDistance;
-    long maxDistance;
+	urg_t urg;
 
-    long lastTimeStamp;
+	long minDistance;
+	long maxDistance;
 
-    bool bSetup;
+	long lastTimeStamp;
 
-    std::vector<std::string> commonPortNames;
-    std::vector<std::string>::iterator commonPortNamesIter;
+	bool bSetup;
+
+	std::vector<std::string> commonPortNames;
+	std::vector<std::string>::iterator commonPortNamesIter;
+
+	ofPolyline roi;
 };
 
 
