@@ -91,8 +91,6 @@ void ofxURG::threadedFunction(){
 		for(size_t i=0; i<numSteps; i++){
 			dataThread[i].degrees = urg_step2deg(&urg, i*getStepSize());
 			dataThread[i].distance = dataRaw[i];
-
-
 		}
 
 		ofNotifyEvent(onNewDataThread, dataThread);
@@ -192,6 +190,56 @@ std::vector<ofxURG::Data> ofxURG::getData(){
 	}
 
 	return filtered;
+}
+
+std::vector<ofVec2f> ofxURG::getPoints(float minDistance){
+	std::vector<ofVec2f> points;
+	for(auto& d: getData()){
+		points.push_back(d.getPosition());
+	}
+
+	if(minDistance == 0)
+		return points;
+
+	float minDistSquared = minDistance*minDistance;
+
+	std::vector<std::vector<ofVec2f>> clusters;
+	for(auto p: points){
+		bool newCluster = true;
+		std::vector<ofVec2f>* cluster = nullptr;
+		for(auto& c: clusters){
+			if(!newCluster)
+				continue;
+			for(auto cp: c){
+				if(cp.distanceSquared(p)<minDistSquared){
+					//c.push_back(p);
+					newCluster = false;
+					cluster = &c;
+					continue;
+				}
+			}
+		}
+
+
+		if(newCluster){
+			clusters.push_back({p});
+		}else{
+			cluster->push_back(p);
+		}
+	}
+
+	//get centers of all clusters
+	std::vector<ofVec2f> ret;
+	for(auto& c:clusters){
+		ofVec2f center;
+		for(auto& p: c){
+			center+=p;
+		}
+		center /= float(c.size());
+		ret.push_back(center);
+	}
+
+	return ret;
 }
 
 std::vector<ofxURG::Data> ofxURG::getDataRaw(){

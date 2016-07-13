@@ -43,6 +43,7 @@ public:
 	void drawRadius();
 
 	std::vector<Data> getData();
+	std::vector<ofVec2f> getPoints(float minDistance=0.f);
 	std::vector<Data> getDataRaw();
 
 	void setROI(ofRectangle rect);
