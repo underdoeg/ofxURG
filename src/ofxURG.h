@@ -9,7 +9,13 @@ extern "C"{
 
 class ofxURG: private ofThread{
 public:
-    struct Data{
+    class Data{
+    public:
+        ofVec2f getPosition(){
+            float rad = ofDegToRad(degrees);
+            return ofVec2f(cos(rad)*distance, sin(rad)*distance);
+        };
+
         float degrees;
         long distance;
     };
@@ -19,6 +25,8 @@ public:
 
     void setup(std::string port="/dev/ttyACM0");
 
+    void start();
+
     void setAngleMinMax(float min, float max);
     void setStepSize(int step);
 
@@ -26,10 +34,14 @@ public:
 
     void drawRadius();
 
-    std::vector<Data> data;
+    std::vector<Data> getData();
+
+    ofEvent<std::vector<Data>> onNewDataThread;
 
 private:
     void update(ofEventArgs& args);
+
+    void newDataThread(std::vector<Data>& data);
     void threadedFunction() override;
 
     void readSensorCapabilities();
@@ -40,12 +52,16 @@ private:
     std::vector<Data> dataThread;
     std::vector<Data> dataExchange;
 
+    bool bNewData;
+
     urg_t urg;
 
     long minDistance;
     long maxDistance;
 
     long lastTimeStamp;
+
+    bool bSetup;
 };
 
 

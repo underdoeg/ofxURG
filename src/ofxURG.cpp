@@ -4,8 +4,10 @@ extern "C"{
 #include "urg_utils.h"
 }
 
-ofxURG::ofxURG(){
-
+ofxURG::ofxURG():
+    bNewData(false),
+    bSetup(false){
+    ofAddListener(onNewDataThread, this, &ofxURG::newDataThread);
 }
 
 ofxURG::~ofxURG(){
@@ -15,7 +17,11 @@ ofxURG::~ofxURG(){
 void ofxURG::setup(string port){
     checkError(urg_open(&urg, URG_SERIAL, port.c_str(), 115200));
     readSensorCapabilities();
-    ofAddListener(ofEvents().update, this, &ofxURG::update);
+    bSetup = true;
+}
+
+void ofxURG::start(){
+    checkError(urg_laser_on(&urg));
     startThread();
 }
 
@@ -24,18 +30,15 @@ void ofxURG::setAngleMinMax(float min, float max){
 }
 
 void ofxURG::setStepSize(int step){
-    checkError(urg_set_scanning_parameter(&urg, urg.scanning_first_step, urg.scanning_last_step, step));
+    int minStep, maxStep;
+    urg_step_min_max(&urg, &minStep, &maxStep);
+    checkError(urg_set_scanning_parameter(&urg, minStep, maxStep, step));
 }
 
 int ofxURG::getStepSize(){
     return urg.scanning_skip_step;
 }
 
-void ofxURG::update(ofEventArgs& args){
-    lock();
-    data = dataExchange;
-    unlock();
-}
 
 void ofxURG::threadedFunction(){
     urg_start_measurement(&urg, URG_DISTANCE, URG_SCAN_INFINITY, 0);
@@ -55,9 +58,7 @@ void ofxURG::threadedFunction(){
             dataThread[i].distance = dataRaw[i];
         }
 
-        lock();
-        dataExchange = dataThread;
-        unlock();
+        ofNotifyEvent(onNewDataThread, dataThread);
     }
 
     urg_stop_measurement(&urg);
@@ -65,7 +66,6 @@ void ofxURG::threadedFunction(){
 
 void ofxURG::readSensorCapabilities(){
     dataRaw.resize(urg_max_data_size(&urg));
-    data.resize(dataRaw.size());
     urg_distance_min_max(&urg, &minDistance, &maxDistance);
 }
 
@@ -81,6 +81,8 @@ bool ofxURG::checkError(int ret){
 }
 
 void ofxURG::drawRadius(){
+    auto data = getData();
+
     if(data.size() == 0)
         return;
 
@@ -105,4 +107,14 @@ void ofxURG::drawRadius(){
 
     ofPopStyle();
     ofPopMatrix();
+}
+
+void ofxURG::newDataThread(std::vector<ofxURG::Data>& data){
+    std::lock_guard<std::mutex> lock(mutex);
+    dataExchange = data;
+}
+
+std::vector<ofxURG::Data> ofxURG::getData(){
+    std::lock_guard<std::mutex> lock(mutex);
+    return dataExchange;
 }

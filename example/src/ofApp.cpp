@@ -5,6 +5,7 @@ void ofApp::setup(){
     urg.setup();
     //urg.setAngleMinMax(100, 140);
     //urg.setStepSize(10);
+    urg.start();
 }
 
 //--------------------------------------------------------------
