@@ -8,6 +8,9 @@ ofxURG::ofxURG():
     bNewData(false),
     bSetup(false){
     ofAddListener(onNewDataThread, this, &ofxURG::newDataThread);
+
+    commonPortNames = {"/dev/ttyACM0", "/dev/ttyACM1", "/dev/ttyACM2", "/dev/ttyACM3", "/dev/ttyUSB0", "/dev/ttyUSB1", "/dev/ttyUSB2", "/dev/ttyUSB3"};
+    commonPortNamesIter = commonPortNames.begin();
 }
 
 ofxURG::~ofxURG(){
@@ -15,7 +18,26 @@ ofxURG::~ofxURG(){
 }
 
 void ofxURG::setup(string port){
-    checkError(urg_open(&urg, URG_SERIAL, port.c_str(), 115200));
+    commonPortNamesIter = commonPortNames.begin();
+    setupInternal(port);
+}
+
+void ofxURG::setupInternal(string port){
+    if(ofTrim(port) == ""){
+        if(commonPortNamesIter == commonPortNames.end())
+            return;
+        port = *commonPortNamesIter;
+        commonPortNamesIter++;
+    }
+
+    if(checkError(urg_open(&urg, URG_SERIAL, port.c_str(), 115200))){
+        ofLogError() << "Could not open " << port;
+        setupInternal("");
+        return;
+    }
+
+    commonPortNamesIter = commonPortNames.begin();
+
     readSensorCapabilities();
     bSetup = true;
 }
@@ -23,6 +45,15 @@ void ofxURG::setup(string port){
 void ofxURG::start(){
     checkError(urg_laser_on(&urg));
     startThread();
+}
+
+void ofxURG::stop(){
+    waitForThread(true);
+    checkError(urg_laser_off(&urg));
+}
+
+bool ofxURG::isRunning(){
+    return isThreadRunning();
 }
 
 void ofxURG::setAngleMinMax(float min, float max){
@@ -44,7 +75,11 @@ void ofxURG::threadedFunction(){
     urg_start_measurement(&urg, URG_DISTANCE, URG_SCAN_INFINITY, 0);
 
     while(isThreadRunning()){
-        checkError(urg_get_distance(&urg, dataRaw.data(), &lastTimeStamp));
+        if(checkError(urg_get_distance(&urg, dataRaw.data(), &lastTimeStamp))){
+            ofLogError("ofxURG") << "Stopping Thread";
+            stopThread();
+            continue;
+        }
 
         size_t numSteps = floor(dataRaw.size() / float(getStepSize()));
         dataThread.resize(numSteps);
@@ -65,7 +100,9 @@ void ofxURG::threadedFunction(){
 }
 
 void ofxURG::readSensorCapabilities(){
-    dataRaw.resize(urg_max_data_size(&urg));
+    int dataSize = urg_max_data_size(&urg);
+    if(dataSize > 0)
+        dataRaw.resize(dataSize);
     urg_distance_min_max(&urg, &minDistance, &maxDistance);
 }
 
@@ -118,3 +155,4 @@ std::vector<ofxURG::Data> ofxURG::getData(){
     std::lock_guard<std::mutex> lock(mutex);
     return dataExchange;
 }
+

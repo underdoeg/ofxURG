@@ -23,9 +23,12 @@ public:
     ofxURG();
     ~ofxURG();
 
-    void setup(std::string port="/dev/ttyACM0");
+    void setup(std::string port="");
 
     void start();
+    void stop();
+
+    bool isRunning();
 
     void setAngleMinMax(float min, float max);
     void setStepSize(int step);
@@ -39,6 +42,9 @@ public:
     ofEvent<std::vector<Data>> onNewDataThread;
 
 private:
+
+    void setupInternal(std::string port);
+
     void update(ofEventArgs& args);
 
     void newDataThread(std::vector<Data>& data);
@@ -62,6 +68,9 @@ private:
     long lastTimeStamp;
 
     bool bSetup;
+
+    std::vector<std::string> commonPortNames;
+    std::vector<std::string>::iterator commonPortNamesIter;
 };
 
 
