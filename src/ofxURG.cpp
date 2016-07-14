@@ -6,7 +6,8 @@ extern "C"{
 
 ofxURG::ofxURG():
 	bNewData(false),
-	bSetup(false){
+	bSetup(false),
+	drawZoom(1){
 	ofAddListener(onNewDataThread, this, &ofxURG::newDataThread);
 
 	commonPortNames = {"/dev/ttyACM0", "/dev/ttyACM1", "/dev/ttyACM2", "/dev/ttyACM3", "/dev/ttyUSB0", "/dev/ttyUSB1", "/dev/ttyUSB2", "/dev/ttyUSB3"};
@@ -70,7 +71,6 @@ int ofxURG::getStepSize(){
 	return urg.scanning_skip_step;
 }
 
-
 void ofxURG::threadedFunction(){
 	urg_start_measurement(&urg, URG_DISTANCE, URG_SCAN_INFINITY, 0);
 
@@ -125,9 +125,7 @@ void ofxURG::drawRadius(){
 
 	ofTranslate(ofGetWidth()*.5, ofGetHeight()*.5);
 
-	float scale = (ofGetHeight()*.65)/maxDistance;
-
-	ofScale(scale);
+	ofScale(getDrawScale());
 
 	ofSetLineWidth(2);
 
@@ -149,11 +147,11 @@ void ofxURG::drawRadius(){
 	ofPopMatrix();
 }
 
-void ofxURG::drawDataRadial(const std::vector<ofxURG::Data>& data, float scale){
+void ofxURG::drawDataRadial(const std::vector<ofxURG::Data>& data){
 	//ofBeginShape();
 	for(auto& d: data){
-		float x = cosf(ofDegToRad(d.degrees)) * d.distance * scale;
-		float y = sinf(ofDegToRad(d.degrees)) * d.distance * scale;
+		float x = cosf(ofDegToRad(d.degrees)) * d.distance;
+		float y = sinf(ofDegToRad(d.degrees)) * d.distance;
 		//ofVertex(x, y);
 		ofDrawLine(0, 0, x, y);
 	}
@@ -268,3 +266,16 @@ ofPolyline ofxURG::getROI(){
 	return roi;
 }
 
+float ofxURG::getDrawScale(){
+	return (ofGetHeight()*.65)/maxDistance*getDrawZoom();
+}
+
+float ofxURG::getDrawZoom() const{
+	return drawZoom;
+}
+
+void ofxURG::setDrawZoom(float value){
+	if(value < .001)
+		value = .001;
+	drawZoom = value;
+}

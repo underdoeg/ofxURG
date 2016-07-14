@@ -52,7 +52,12 @@ public:
 
 	ofPolyline getROI();
 
+	float getDrawScale();
+
 	ofEvent<std::vector<Data>> onNewDataThread;
+
+	float getDrawZoom() const;
+	void setDrawZoom(float value);
 
 private:
 
@@ -60,7 +65,7 @@ private:
 
 	void update(ofEventArgs& args);
 
-	void drawDataRadial(const std::vector<Data>& data, float scale=1.f);
+	void drawDataRadial(const std::vector<Data>& data);
 
 	void newDataThread(std::vector<Data>& data);
 	void threadedFunction() override;
@@ -88,6 +93,8 @@ private:
 	std::vector<std::string>::iterator commonPortNamesIter;
 
 	ofPolyline roi;
+
+	float drawZoom;
 };
 
 

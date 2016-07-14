@@ -49,6 +49,10 @@ void ofApp::mouseReleased(int x, int y, int button){
 
 }
 
+void ofApp::mouseScrolled(int x, int y, float scrollX, float scrollY){
+	urg.setDrawZoom(urg.getDrawZoom()+scrollY*.05);
+}
+
 //--------------------------------------------------------------
 void ofApp::mouseEntered(int x, int y){
 
