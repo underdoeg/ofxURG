@@ -1,35 +1,41 @@
-#ifndef URG_ERRNO_H
-#define URG_ERRNO_H
+#ifndef QRK_C_URG_ERRNO_H
+#define QRK_C_URG_ERRNO_H
 
 /*!
   \file
-  \brief URG ライブラリのエラー定義
+  \brief Error code of URG
 
   \author Satofumi KAMIMURA
 
-  $Id$
+  $Id: urg_errno.h 1714 2010-02-21 20:53:28Z satofumi $
 */
 
+
 enum {
-    URG_NO_ERROR = 0,
-    URG_UNKNOWN_ERROR = -1,
-    URG_NOT_CONNECTED = -2,
-    URG_NOT_IMPLEMENTED = -3,
-    URG_INVALID_RESPONSE = -4,
-    URG_NO_RESPONSE = -5,
-
-    URG_SEND_ERROR = -6,
-    URG_RECEIVE_ERROR = -7,
-    URG_CHECKSUM_ERROR = -8,
-    URG_INVALID_PARAMETER = -9,
-    URG_MEASUREMENT_TYPE_MISMATCH = -10,
-    URG_COMMON_ERROR_LAST,
-
-    URG_SERIAL_OPEN_ERROR = (URG_COMMON_ERROR_LAST -1) -1,
-    URG_NOT_DETECT_BAUDRATE_ERROR = (URG_COMMON_ERROR_LAST -1) -2,
-    URG_ETHERNET_OPEN_ERROR = (URG_COMMON_ERROR_LAST -1) -3,
-    URG_SCANNING_PARAMETER_ERROR = (URG_COMMON_ERROR_LAST -1) -4,
-    URG_DATA_SIZE_PARAMETER_ERROR = (URG_COMMON_ERROR_LAST -1) -5,
+  UrgNoError = 0,               /*!< Normal */
+  UrgNotImplemented = -1,       /*!< Not implemented */
+  UrgSendFail = -2,
+  UrgRecvFail = -3,
+  UrgScip10 = -4,               /*!< Response from SCIP1.0  */
+  UrgSsFail = -5,               /*!< Error in response from SS command */
+  UrgAdjustBaudrateFail = -6,   /*!< Fails to adjust baudrate */
+  UrgInvalidArgs = -7,          /*!< Invalid argument specification */
+  UrgInvalidResponse = -8,      /*!< Response error from URG side */
+  UrgSerialConnectionFail = -9, /*!< Fail to establish serial connection */
+  UrgSerialRecvFail = -10,      /*!< Fail to receive data */
+  UrgMismatchResponse = -11,    /*!< Mismatch in echoback in response */
+  UrgNoResponse = -12,          /*!< No response */
+  UtmNoGDIntensity = -13, /*!< Coudn't receive intensity data by GD */
 };
 
-#endif /* !URG_ERRNO_H */
+
+/*!
+  \brief Returns error message
+
+  \param[in] urg_errno Error value of URG
+
+  \return error message
+*/
+extern const char* urg_strerror(const int urg_errno);
+
+#endif /* !QRK_C_URG_ERRNO_H */

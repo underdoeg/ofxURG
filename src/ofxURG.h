@@ -4,7 +4,7 @@
 #include "ofMain.h"
 
 extern "C"{
-#include "urg_sensor.h"
+#include "urg_ctrl.h"
 }
 
 class ofxURG: private ofThread{
@@ -46,11 +46,13 @@ public:
 	std::vector<ofVec2f> getPoints(float minDistance=0.f);
 	std::vector<Data> getDataRaw();
 
-	void setROI(ofRectangle rect);
-	void setROI(ofVec2f a, ofVec2f b, ofVec2f c, ofVec2f d);
-	void setROI(ofPolyline poly);
+	void setRoi(ofRectangle rect);
+	void setRoi(ofVec2f a, ofVec2f b, ofVec2f c, ofVec2f d);
+	void setRoi(std::vector<ofVec2f> points);
+	void setRoi(ofPolyline poly);
 
-	ofPolyline getROI();
+	std::vector<ofVec2f> getRoiPoints();
+	ofPolyline getRoi();
 
 	float getDrawScale();
 

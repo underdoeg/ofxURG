@@ -1,5 +1,5 @@
-#ifndef URG_RING_BUFFER_H
-#define URG_RING_BUFFER_H
+#ifndef RING_BUFFER_H
+#define RING_BUFFER_H
 
 /*!
   \file
@@ -7,7 +7,7 @@
 
   \author Satofumi KAMIMURA
 
-  $Id$
+  $Id: ring_buffer.h 1811 2010-04-30 16:12:05Z satofumi $
 */
 
 
@@ -18,7 +18,7 @@ typedef struct
     int buffer_size;              //!< バッファサイズ
     int first;                    //!< バッファの先頭位置
     int last;                     //!< バッファの最終位置
-} ring_buffer_t;
+} ringBuffer_t;
 
 
 /*!
@@ -28,7 +28,7 @@ typedef struct
   \param[in] buffer 割り当てるバッファ
   \param[in] shift_length バッファサイズの 2 の乗数
 */
-extern void ring_initialize(ring_buffer_t *ring,
+extern void ring_initialize(ringBuffer_t *ring,
                             char *buffer, const int shift_length);
 
 
@@ -37,7 +37,7 @@ extern void ring_initialize(ring_buffer_t *ring,
 
   \param[in] ring リングバッファの構造体
 */
-extern void ring_clear(ring_buffer_t *ring);
+extern void ring_clear(ringBuffer_t *ring);
 
 
 /*!
@@ -45,7 +45,7 @@ extern void ring_clear(ring_buffer_t *ring);
 
   \param[in] ring リングバッファの構造体
 */
-extern int ring_size(const ring_buffer_t *ring);
+extern int ring_size(const ringBuffer_t *ring);
 
 
 /*!
@@ -53,7 +53,7 @@ extern int ring_size(const ring_buffer_t *ring);
 
   \param[in] ring リングバッファの構造体
 */
-extern int ring_capacity(const ring_buffer_t *ring);
+extern int ring_capacity(const ringBuffer_t *ring);
 
 
 /*!
@@ -65,7 +65,7 @@ extern int ring_capacity(const ring_buffer_t *ring);
 
   \return 格納したデータ数
 */
-extern int ring_write(ring_buffer_t *ring, const char *data, int size);
+extern int ring_write(ringBuffer_t *ring, const char *data, int size);
 
 
 /*!
@@ -77,6 +77,6 @@ extern int ring_write(ring_buffer_t *ring, const char *data, int size);
 
   \return 取り出したデータ数
 */
-extern int ring_read(ring_buffer_t *ring, char *buffer, int size);
+extern int ring_read(ringBuffer_t *ring, char *buffer, int size);
 
 #endif /* ! RING_BUFFER_H */

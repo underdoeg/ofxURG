@@ -62,7 +62,7 @@ common:
 	
 	# when parsing the file system looking for sources exclude this for all or
 	# a specific platform
-	ADDON_SOURCES_EXCLUDE = libs/urg/src/urg_serial_utils_windows.c  libs/urg/src/urg_serial_windows.c  libs/urg/src/urg_serial_utils_linux.c libs/urg/src/urg_serial_linux.c 
+	ADDON_SOURCES_EXCLUDE = libs/urg/src/serial_ctrl_win.c libs/urg/src/serial_ctrl_lin.c
 	
 	# when parsing the file system looking for include paths exclude this for all or
 	# a specific platform
@@ -97,7 +97,7 @@ linux:
     # ADDON_INCLUDES_EXCLUDE = 
 	
 win_cb:
-	
+
 vs:
 
 linuxarmv6l:	

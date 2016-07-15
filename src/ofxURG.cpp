@@ -1,7 +1,7 @@
 #include "ofxURG.h"
 
 extern "C"{
-#include "urg_utils.h"
+//#include "urg_utils.h"
 }
 
 ofxURG::ofxURG():
@@ -11,14 +11,16 @@ ofxURG::ofxURG():
 	ofAddListener(onNewDataThread, this, &ofxURG::newDataThread);
 
 	commonPortNames = {"/dev/ttyACM0", "/dev/ttyACM1", "/dev/ttyACM2", "/dev/ttyACM3", "/dev/ttyUSB0", "/dev/ttyUSB1", "/dev/ttyUSB2", "/dev/ttyUSB3"};
-	commonPortNamesIter = commonPortNames.begin();
+	commonPortNamesIter = commonPortNames.begin();	
 }
 
 ofxURG::~ofxURG(){
 	waitForThread(true);
+	urg_disconnect(&urg);
 }
 
 void ofxURG::setup(string port){
+	urg_initialize(&urg);
 	commonPortNamesIter = commonPortNames.begin();
 	setupInternal(port);
 }
@@ -31,11 +33,15 @@ void ofxURG::setupInternal(string port){
 		commonPortNamesIter++;
 	}
 
-	if(checkError(urg_open(&urg, URG_SERIAL, port.c_str(), 115200))){
+	ofLogNotice("ofxURG") << "open port " << port;
+
+	if(!ofFile::doesFileExist(port, false) || checkError(urg_connect(&urg, port.c_str(), 115200))){
 		ofLogError() << "Could not open " << port;
 		setupInternal("");
 		return;
 	}
+
+	ofLogNotice("ofxURG") << "connected to " << port;
 
 	commonPortNamesIter = commonPortNames.begin();
 
@@ -44,13 +50,13 @@ void ofxURG::setupInternal(string port){
 }
 
 void ofxURG::start(){
-	checkError(urg_laser_on(&urg));
+	checkError(urg_laserOn(&urg));
 	startThread();
 }
 
 void ofxURG::stop(){
 	waitForThread(true);
-	checkError(urg_laser_off(&urg));
+	checkError(urg_laserOff(&urg));
 }
 
 bool ofxURG::isRunning(){
@@ -58,24 +64,25 @@ bool ofxURG::isRunning(){
 }
 
 void ofxURG::setAngleMinMax(float min, float max){
-	checkError(urg_set_scanning_parameter(&urg, urg_deg2step(&urg, min), urg_deg2step(&urg, max), urg.scanning_skip_step));
+	//checkError(urg_(&urg, urg_deg2index(&urg, min), urg_deg2index(&urg, max), urg.scanning_skip_step));
 }
 
 void ofxURG::setStepSize(int step){
 	int minStep, maxStep;
-	urg_step_min_max(&urg, &minStep, &maxStep);
-	checkError(urg_set_scanning_parameter(&urg, minStep, maxStep, step));
+	checkError(urg_setSkipLines(&urg, step));
+	//checkError(urg_set_scanning_parameter(&urg, minStep, maxStep, step));
 }
 
 int ofxURG::getStepSize(){
-	return urg.scanning_skip_step;
+	return urg.skip_lines_;
 }
 
 void ofxURG::threadedFunction(){
-	urg_start_measurement(&urg, URG_DISTANCE, URG_SCAN_INFINITY, 0);
+	checkError(urg_setCaptureTimes(&urg, 0));
 
 	while(isThreadRunning()){
-		if(checkError(urg_get_distance(&urg, dataRaw.data(), &lastTimeStamp))){
+		checkError(urg_requestData(&urg, URG_GD, URG_FIRST, URG_LAST));
+		if(checkError(urg_receiveData(&urg, dataRaw.data(), dataRaw.size()))){
 			ofLogError("ofxURG") << "Stopping Thread";
 			stopThread();
 			continue;
@@ -89,21 +96,28 @@ void ofxURG::threadedFunction(){
 		}
 
 		for(size_t i=0; i<numSteps; i++){
-			dataThread[i].degrees = urg_step2deg(&urg, i*getStepSize());
+			dataThread[i].degrees = urg_index2deg(&urg, i*getStepSize())-90;
 			dataThread[i].distance = dataRaw[i];
 		}
 
 		ofNotifyEvent(onNewDataThread, dataThread);
 	}
 
-	urg_stop_measurement(&urg);
+
+	//checkError(urg_stop_measurement(&urg));
 }
 
 void ofxURG::readSensorCapabilities(){
-	int dataSize = urg_max_data_size(&urg);
+	int dataSize = urg_dataMax(&urg);
 	if(dataSize > 0)
 		dataRaw.resize(dataSize);
-	urg_distance_min_max(&urg, &minDistance, &maxDistance);
+	else{
+		ofLogError("ofxURG") << "Max datasize wrong value: " << dataSize;
+	}
+	minDistance = urg_minDistance(&urg);
+	maxDistance = urg_maxDistance(&urg);
+	//urg_(&urg, &minDistance, &maxDistance);
+	ofLogNotice("ofxURG") << "Data Size: " << dataSize;
 }
 
 void ofxURG::printLastError(){
@@ -209,7 +223,7 @@ std::vector<ofVec2f> ofxURG::getPoints(float minDistance){
 			if(!newCluster)
 				continue;
 			for(auto cp: c){
-				if(cp.distanceSquared(p)<minDistSquared){
+				if(cp.squareDistance(p)<minDistSquared){
 					//c.push_back(p);
 					newCluster = false;
 					cluster = &c;
@@ -245,29 +259,46 @@ std::vector<ofxURG::Data> ofxURG::getDataRaw(){
 	return dataExchange;
 }
 
-void ofxURG::setROI(ofRectangle rect){
-	setROI(ofPolyline::fromRectangle(rect));
+void ofxURG::setRoi(ofRectangle rect){
+	setRoi(ofPolyline::fromRectangle(rect));
 }
 
-void ofxURG::setROI(ofVec2f a, ofVec2f b, ofVec2f c, ofVec2f d){
+void ofxURG::setRoi(ofVec2f a, ofVec2f b, ofVec2f c, ofVec2f d){
 	ofPolyline poly;
 	poly.addVertices({a, b, c, d});
-	setROI(poly);
+	setRoi(poly);
 }
 
-void ofxURG::setROI(ofPolyline poly){
+void ofxURG::setRoi(std::vector<ofVec2f> points){
+	ofPolyline poly;
+	for(auto p: points){
+		poly.addVertex(p);
+	}
+	setRoi(poly);
+}
+
+void ofxURG::setRoi(ofPolyline poly){
+	poly.close();
 	lock();
 	roi = poly;
 	unlock();
 }
 
-ofPolyline ofxURG::getROI(){
+std::vector<ofVec2f> ofxURG::getRoiPoints(){
+	std::vector<ofVec2f> pts;
+	for(auto p: getRoi()){
+		pts.push_back(p);
+	}
+	return pts;
+}
+
+ofPolyline ofxURG::getRoi(){
 	std::lock_guard<std::mutex> lock(mutex);
 	return roi;
 }
 
 float ofxURG::getDrawScale(){
-	return (ofGetHeight()*.65)/maxDistance*getDrawZoom();
+	return float(ofGetHeight())/maxDistance*getDrawZoom();
 }
 
 float ofxURG::getDrawZoom() const{
