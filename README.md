@@ -1,4 +1,4 @@
 # ofxURG
 Wrapper to use Hokuyo URG-04LX sensors in openframeworks
 
-Only Tested on Arch Linux. Should work with all linux distributions.
+Tested on Arch Linux and Ubuntu 16.04 LTS. Should work with all linux distributions.
