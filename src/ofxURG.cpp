@@ -139,7 +139,7 @@ void ofxURG::drawRadius(){
 
 	ofTranslate(ofGetWidth()*.5, ofGetHeight()*.5);
 
-	ofScale(getDrawScale());
+	ofScale(getDrawScale(), getDrawScale(), getDrawScale());
 
 	ofSetLineWidth(2);
 
