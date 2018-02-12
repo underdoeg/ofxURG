@@ -131,7 +131,7 @@ bool ofxURG::checkError(int ret){
 	return error;
 }
 
-void ofxURG::drawRadius(){
+void ofxURG::drawRadius(ofColor rawColor, ofColor filteredColor){
 	auto filteredData = getData();
 
 	ofPushMatrix();
@@ -143,10 +143,10 @@ void ofxURG::drawRadius(){
 
 	ofSetLineWidth(2);
 
-	ofSetColor(180);
+	ofSetColor(rawColor);
 	drawDataRadial(getDataRaw());
 
-	ofSetColor(60);
+	ofSetColor(filteredColor);
 	drawDataRadial(filteredData);
 
 	ofSetLineWidth(1);
