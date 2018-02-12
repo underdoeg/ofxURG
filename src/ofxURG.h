@@ -40,7 +40,7 @@ public:
 
 	int getStepSize();
 
-	void drawRadius(ofColor rawColor, ofColor filteredColor);
+	void drawRadius(ofColor rawColor = ofColor::darkGrey, ofColor filteredColor = ofColor::mediumBlue);
 
 	std::vector<Data> getData();
 	std::vector<ofVec2f> getPoints(float minDistance=0.f);
