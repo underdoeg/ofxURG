@@ -17,8 +17,6 @@ void ofApp::setup(){
     line.close();
     urg.setRoi(line);
 
-    urg.setPointSeparation(300);
-
     urg.start();
 }
 
@@ -30,9 +28,9 @@ void ofApp::update(){
 void ofApp::draw(){
     urg.drawRadius();
 
-    vector<ofVec2f> points = urg.getPoints();
+    vector<ofVec2f> points = urg.getPoints(300);
+    urg.drawPoints(points, 100);
 
-    urg.drawPoints(100);
     int numPoints = points.size();
 
     ofDrawBitmapStringHighlight(ofToString(ofGetFrameRate()) + "fps", 30, 30);

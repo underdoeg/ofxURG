@@ -23,7 +23,6 @@ void ofxURG::setup(string port){
 	urg_initialize(&urg);
 	commonPortNamesIter = commonPortNames.begin();
 	setupInternal(port);
-	pointSeparationDistance = 0; // default until overridden
 }
 
 void ofxURG::setupInternal(string port){
@@ -162,8 +161,7 @@ void ofxURG::drawRadius(ofColor rawColor, ofColor filteredColor){
 	ofPopMatrix();
 }
 
-void ofxURG::drawPoints(float pointSize) {
-	vector<ofVec2f> points = getPoints();
+void ofxURG::drawPoints(std::vector<ofVec2f> points, float pointSize) {
 	ofPushMatrix();
 	ofPushStyle();
 
@@ -224,7 +222,7 @@ std::vector<ofxURG::Data> ofxURG::getData(){
 	return filtered;
 }
 
-std::vector<ofVec2f> ofxURG::getPoints(){
+std::vector<ofVec2f> ofxURG::getPoints(float pointSeparationDistance){
 	std::vector<ofVec2f> points;
 	for(auto& d: getData()){
 		points.push_back(d.getPosition());
@@ -315,10 +313,6 @@ std::vector<ofVec2f> ofxURG::getRoiPoints(){
 ofPolyline ofxURG::getRoi(){
 	std::lock_guard<std::mutex> lock(mutex);
 	return roi;
-}
-
-void ofxURG::setPointSeparation(float minDistance) {
-	pointSeparationDistance = minDistance;
 }
 
 float ofxURG::getDrawScale(){

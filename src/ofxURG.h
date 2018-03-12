@@ -41,18 +41,16 @@ public:
 	int getStepSize();
 
 	void drawRadius(ofColor rawColor = ofColor::darkGrey, ofColor filteredColor = ofColor::mediumBlue);
-	void drawPoints(float pointSize=10.0f);
+	void drawPoints(std::vector<ofVec2f> points, float pointSize=10.0f);
 
 	std::vector<Data> getData();
-	std::vector<ofVec2f> getPoints();
+	std::vector<ofVec2f> getPoints(float pointSeparationDistance);
 	std::vector<Data> getDataRaw();
 
 	void setRoi(ofRectangle rect);
 	void setRoi(ofVec2f a, ofVec2f b, ofVec2f c, ofVec2f d);
 	void setRoi(std::vector<ofVec2f> points);
 	void setRoi(ofPolyline poly);
-
-	void setPointSeparation(float minDistance);
 
 	std::vector<ofVec2f> getRoiPoints();
 	ofPolyline getRoi();
@@ -98,7 +96,6 @@ private:
 	std::vector<std::string>::iterator commonPortNamesIter;
 
 	ofPolyline roi;
-	float pointSeparationDistance;
 
 	float drawZoom;
 };
