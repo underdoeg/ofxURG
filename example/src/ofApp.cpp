@@ -3,8 +3,20 @@
 //--------------------------------------------------------------
 void ofApp::setup(){
     urg.setup();
-    //urg.setAngleMinMax(100, 140);
-    //urg.setStepSize(10);
+
+    // example: ROI with simple rectangle
+    // urg.setRoi(ofRectangle(-500, -2100, 1000, 2000));
+
+    // example: ROI with irregular shape
+    ofPolyline line;
+    line.addVertex(-500, -2100);
+    line.addVertex(550, -2200);
+    line.addVertex(505, -200);
+    line.addVertex(-400, -300);
+    line.addVertex(-600, -1000);
+    line.close();
+    urg.setRoi(line);
+
     urg.start();
 }
 
@@ -16,7 +28,26 @@ void ofApp::update(){
 void ofApp::draw(){
     urg.drawRadius();
 
-    ofDrawBitmapStringHighlight(ofToString(ofGetFrameRate()), 30, 30);
+    ofPushMatrix();
+    ofTranslate(ofGetWidth()/2, ofGetHeight()/2);
+    unsigned int MIN_DIST_SEPARATION = 300;
+    vector<ofVec2f> points = urg.getPoints(MIN_DIST_SEPARATION);
+    float pointRadius = 10.0;
+
+    int numPoints = 0;
+
+    for (auto p: points) {
+        ofSetColor(255,0,0);
+        float mapX = ofMap(p.x, -5600, 5600, -ofGetWidth()/2, ofGetWidth()/2);
+        float mapY = ofMap(p.y, -5600, 5600, -ofGetWidth()/2, ofGetWidth()/2);
+        ofEllipse(mapX, mapY, pointRadius, pointRadius);
+        ofDrawBitmapString(ofToString(p.x,0) + "," + ofToString(p.y,0), mapX + pointRadius, mapY);
+        numPoints++;
+    }
+    ofPopMatrix();
+
+    ofDrawBitmapStringHighlight(ofToString(ofGetFrameRate()) + "fps", 30, 30);
+    ofDrawBitmapStringHighlight(ofToString(numPoints) + " blobs", 30, 50);
 }
 
 //--------------------------------------------------------------

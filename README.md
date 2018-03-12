@@ -1,7 +1,7 @@
 # ofxURG
 Wrapper to use Hokuyo URG-04LX sensors in openframeworks
 
-Tested on Arch Linux and Ubuntu 16.04 LTS. Should work with all linux distributions.
+Tested on Arch Linux, Ubuntu 16.04 LTS and even Raspbian for Raspberry Pi. Should work with all linux distributions.
 
 ## Connecting to `/dev/ACM0` not working?
 The URG-04LX device does not need any special drivers for Linux, but because it uses the ACM protocol, setup may not be completely straightforward.
