@@ -23,6 +23,7 @@ void ofxURG::setup(string port){
 	urg_initialize(&urg);
 	commonPortNamesIter = commonPortNames.begin();
 	setupInternal(port);
+	pointSeparationDistance = 0; // default until overridden
 }
 
 void ofxURG::setupInternal(string port){
@@ -161,6 +162,25 @@ void ofxURG::drawRadius(ofColor rawColor, ofColor filteredColor){
 	ofPopMatrix();
 }
 
+void ofxURG::drawPoints(float pointSize) {
+	vector<ofVec2f> points = getPoints();
+	ofPushMatrix();
+	ofPushStyle();
+
+	ofTranslate(ofGetWidth()*.5, ofGetHeight()*.5);
+
+	ofScale(getDrawScale(), getDrawScale(), getDrawScale());
+
+	ofSetColor(255,0,0);
+	for (auto p: points) {
+        ofDrawCircle(p.x, p.y, pointSize);
+        ofDrawBitmapString(ofToString(p.x,0) + "," + ofToString(p.y,0), p.x + pointSize, p.y);
+    }
+	ofPopStyle();
+	ofPopMatrix();
+
+}
+
 void ofxURG::drawDataRadial(const std::vector<ofxURG::Data>& data){
 	//ofBeginShape();
 	for(auto& d: data){
@@ -204,16 +224,16 @@ std::vector<ofxURG::Data> ofxURG::getData(){
 	return filtered;
 }
 
-std::vector<ofVec2f> ofxURG::getPoints(float minDistance){
+std::vector<ofVec2f> ofxURG::getPoints(){
 	std::vector<ofVec2f> points;
 	for(auto& d: getData()){
 		points.push_back(d.getPosition());
 	}
 
-	if(minDistance == 0)
+	if(pointSeparationDistance == 0)
 		return points;
 
-	float minDistSquared = minDistance*minDistance;
+	float minDistSquared = pointSeparationDistance*pointSeparationDistance;
 
 	std::vector<std::vector<ofVec2f>> clusters;
 	for(auto p: points){
@@ -295,6 +315,10 @@ std::vector<ofVec2f> ofxURG::getRoiPoints(){
 ofPolyline ofxURG::getRoi(){
 	std::lock_guard<std::mutex> lock(mutex);
 	return roi;
+}
+
+void ofxURG::setPointSeparation(float minDistance) {
+	pointSeparationDistance = minDistance;
 }
 
 float ofxURG::getDrawScale(){

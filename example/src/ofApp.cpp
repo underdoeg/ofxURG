@@ -17,6 +17,8 @@ void ofApp::setup(){
     line.close();
     urg.setRoi(line);
 
+    urg.setPointSeparation(300);
+
     urg.start();
 }
 
@@ -28,23 +30,10 @@ void ofApp::update(){
 void ofApp::draw(){
     urg.drawRadius();
 
-    ofPushMatrix();
-    ofTranslate(ofGetWidth()/2, ofGetHeight()/2);
-    unsigned int MIN_DIST_SEPARATION = 300;
-    vector<ofVec2f> points = urg.getPoints(MIN_DIST_SEPARATION);
-    float pointRadius = 10.0;
+    vector<ofVec2f> points = urg.getPoints();
 
-    int numPoints = 0;
-
-    for (auto p: points) {
-        ofSetColor(255,0,0);
-        float mapX = ofMap(p.x, -5600, 5600, -ofGetWidth()/2, ofGetWidth()/2);
-        float mapY = ofMap(p.y, -5600, 5600, -ofGetWidth()/2, ofGetWidth()/2);
-        ofEllipse(mapX, mapY, pointRadius, pointRadius);
-        ofDrawBitmapString(ofToString(p.x,0) + "," + ofToString(p.y,0), mapX + pointRadius, mapY);
-        numPoints++;
-    }
-    ofPopMatrix();
+    urg.drawPoints(100);
+    int numPoints = points.size();
 
     ofDrawBitmapStringHighlight(ofToString(ofGetFrameRate()) + "fps", 30, 30);
     ofDrawBitmapStringHighlight(ofToString(numPoints) + " blobs", 30, 50);
