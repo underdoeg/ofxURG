@@ -161,7 +161,7 @@ void ofxURG::drawRadius(ofColor rawColor, ofColor filteredColor){
 	ofPopMatrix();
 }
 
-void ofxURG::drawPoints(std::vector<ofVec2f> points, float pointSize, ofColor pointColor) {
+void ofxURG::drawPoints(std::vector<ofVec2f> points, float pointSize, ofColor pointColor, bool positionLabels) {
 	ofPushMatrix();
 	ofPushStyle();
 
@@ -172,7 +172,9 @@ void ofxURG::drawPoints(std::vector<ofVec2f> points, float pointSize, ofColor po
 	ofSetColor(pointColor);
 	for (auto p: points) {
         ofDrawCircle(p.x, p.y, pointSize);
-        ofDrawBitmapString(ofToString(p.x,0) + "," + ofToString(p.y,0), p.x + pointSize, p.y);
+		if (positionLabels) {
+			ofDrawBitmapString(ofToString(p.x,0) + "," + ofToString(p.y,0), p.x + pointSize, p.y);
+		}
     }
 	ofPopStyle();
 	ofPopMatrix();

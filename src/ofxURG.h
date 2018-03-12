@@ -41,10 +41,10 @@ public:
 	int getStepSize();
 
 	void drawRadius(ofColor rawColor = ofColor::darkGrey, ofColor filteredColor = ofColor::mediumBlue);
-	void drawPoints(std::vector<ofVec2f> points, float pointSize=10.0f, ofColor pointColor = ofColor::crimson);
+	void drawPoints(std::vector<ofVec2f> point, float pointSize=10.0f, ofColor pointColor = ofColor::crimson, bool positionLabels=true);
 
 	std::vector<Data> getData();
-	std::vector<ofVec2f> getPoints(float pointSeparationDistance);
+	std::vector<ofVec2f> getPoints(float pointSeparationDistance=0.0f);
 	std::vector<Data> getDataRaw();
 
 	void setRoi(ofRectangle rect);

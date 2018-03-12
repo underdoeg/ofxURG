@@ -33,6 +33,9 @@ void ofApp::draw(){
 
     int numPoints = points.size();
 
+    vector<ofVec2f> calibrationPoints = urg.getPoints();
+    urg.drawPoints(calibrationPoints, 10, ofColor::azure, false);
+
     ofDrawBitmapStringHighlight(ofToString(ofGetFrameRate()) + "fps", 30, 30);
     ofDrawBitmapStringHighlight(ofToString(numPoints) + " blobs", 30, 50);
 }
