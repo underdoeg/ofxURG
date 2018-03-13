@@ -58,8 +58,6 @@ public:
 
 	void calibrateMask(float tolerance=50.0f);
 	std::vector<ofVec2f> getMaskPoints();
-	bool passesMask(Step s);
-	float maskTolerance;
 
 	float getDrawScale();
 
@@ -86,7 +84,10 @@ private:
 	std::vector<long> dataRaw;
 	std::vector<Step> dataThread;
 	std::vector<Step> dataExchange;
-	std::vector<Step> maskSteps;
+	std::vector<ofVec2f> maskPoints;
+
+	bool passesMask(ofVec2f p);
+	float maskTolerance;
 
 	bool bNewData;
 

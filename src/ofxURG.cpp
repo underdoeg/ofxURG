@@ -211,7 +211,7 @@ std::vector<ofxURG::Step> ofxURG::getDataFiltered(){
 		if (roi.size() > 0 && !roi.inside(p)) {
 			passes = false;
 		}
-		if (maskSteps.size() > 0 && !passesMask(s)) {
+		if (maskPoints.size() > 0 && !passesMask(p)) {
 			passes = false;
 		}
 		if (passes) {
@@ -223,12 +223,10 @@ std::vector<ofxURG::Step> ofxURG::getDataFiltered(){
 
 }
 
-bool ofxURG::passesMask(Step s) {
+bool ofxURG::passesMask(ofVec2f p1) {
 	
 	bool closeToMask = false;
-	ofVec2f p1 = s.getPosition();
-	for (auto& maskStep: maskSteps) {
-		ofVec2f p2 = maskStep.getPosition();
+	for (auto& p2: maskPoints) {
 		float distance = p1.distance(p2);
 		if (distance < maskTolerance) {
 			closeToMask = true;
@@ -336,16 +334,16 @@ ofPolyline ofxURG::getRoi(){
 }
 
 void ofxURG::calibrateMask(float tolerance) {
-	maskSteps = getDataRaw();
+	ofLogNotice("calibrating mask points from steps snapshot...");
+	std::vector<Step> maskSteps = getDataRaw();
+	for (auto s: maskSteps) {
+		maskPoints.push_back(s.getPosition());
+	}
 	maskTolerance = tolerance;
 }
 
 std::vector<ofVec2f> ofxURG::getMaskPoints() {
-	std::vector<ofVec2f> pts;
-	for(auto p: maskSteps){
-		pts.push_back(p.getPosition());
-	}
-	return pts;
+	return maskPoints;
 }
 
 float ofxURG::getDrawScale(){
