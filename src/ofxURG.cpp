@@ -131,23 +131,23 @@ bool ofxURG::checkError(int ret){
 	return error;
 }
 
-void ofxURG::drawRadius(){
-	auto data = getData();
+void ofxURG::drawRadius(ofColor rawColor, ofColor filteredColor){
+	auto filteredData = getDataFiltered();
 
 	ofPushMatrix();
 	ofPushStyle();
 
 	ofTranslate(ofGetWidth()*.5, ofGetHeight()*.5);
 
-	ofScale(getDrawScale());
+	ofScale(getDrawScale(), getDrawScale(), getDrawScale());
 
 	ofSetLineWidth(2);
 
-	ofSetColor(180);
+	ofSetColor(rawColor);
 	drawDataRadial(getDataRaw());
 
-	ofSetColor(60);
-	drawDataRadial(data);
+	ofSetColor(filteredColor);
+	drawDataRadial(filteredData);
 
 	ofSetLineWidth(1);
 	ofSetColor(0);
@@ -161,7 +161,27 @@ void ofxURG::drawRadius(){
 	ofPopMatrix();
 }
 
-void ofxURG::drawDataRadial(const std::vector<ofxURG::Data>& data){
+void ofxURG::drawPoints(std::vector<ofVec2f> points, float pointSize, ofColor pointColor, bool positionLabels) {
+	ofPushMatrix();
+	ofPushStyle();
+
+	ofTranslate(ofGetWidth()*.5, ofGetHeight()*.5);
+
+	ofScale(getDrawScale(), getDrawScale(), getDrawScale());
+
+	ofSetColor(pointColor);
+	for (auto p: points) {
+        ofDrawCircle(p.x, p.y, pointSize);
+		if (positionLabels) {
+			ofDrawBitmapString(ofToString(p.x,0) + "," + ofToString(p.y,0), p.x + pointSize, p.y);
+		}
+    }
+	ofPopStyle();
+	ofPopMatrix();
+
+}
+
+void ofxURG::drawDataRadial(const std::vector<ofxURG::Step>& data){
 	//ofBeginShape();
 	for(auto& d: data){
 		float x = cosf(ofDegToRad(d.degrees)) * d.distance;
@@ -172,48 +192,60 @@ void ofxURG::drawDataRadial(const std::vector<ofxURG::Data>& data){
 	//ofEndShape();
 }
 
-void ofxURG::newDataThread(std::vector<ofxURG::Data>& data){
+void ofxURG::newDataThread(std::vector<ofxURG::Step>& steps){
 	std::lock_guard<std::mutex> lock(mutex);
-	dataExchange = data;
+	dataExchange = steps;
 }
 
-std::vector<ofxURG::Data> ofxURG::getData(){
+std::vector<ofxURG::Step> ofxURG::getDataFiltered(){
 	lock();
-	std::vector<Data> data = dataExchange;
+	std::vector<Step> steps = dataExchange;
 	unlock();
 
-	std::vector<Data> filtered;
+	std::vector<Step> filtered;
+	
+	for(auto& s: steps){
+		ofVec2f p = s.getPosition();
 
-	if(roi.size() > 0){
-		for(auto& d: data){
-			ofVec2f p = d.getPosition();
-			/*
-			if(!roi.inside(p)){
-				//dataThread[i].setPosition(roiThread.getClosestPoint(p));
-				d.distance = 0;
-			}
-			*/
-			if(roi.inside(p)){
-				filtered.push_back(d);
-			}
+		bool passes = true;
+		if (roi.size() > 0 && !roi.inside(p)) {
+			passes = false;
 		}
-	}else{
-		filtered = data;
+		if (maskPoints.size() > 0 && !passesMask(p)) {
+			passes = false;
+		}
+		if (passes) {
+			filtered.push_back(s);
+		}
 	}
 
 	return filtered;
+
 }
 
-std::vector<ofVec2f> ofxURG::getPoints(float minDistance){
+bool ofxURG::passesMask(ofVec2f p1) {
+	
+	bool closeToMask = false;
+	for (auto& p2: maskPoints) {
+		float distance = p1.distance(p2);
+		if (distance < maskTolerance) {
+			closeToMask = true;
+		}
+	}
+	
+	return !closeToMask;
+}
+
+std::vector<ofVec2f> ofxURG::getPoints(float pointSeparationDistance){
 	std::vector<ofVec2f> points;
-	for(auto& d: getData()){
-		points.push_back(d.getPosition());
+	for(auto& step: getDataFiltered()){
+		points.push_back(step.getPosition());
 	}
 
-	if(minDistance == 0)
+	if(pointSeparationDistance == 0)
 		return points;
 
-	float minDistSquared = minDistance*minDistance;
+	float minDistSquared = pointSeparationDistance*pointSeparationDistance;
 
 	std::vector<std::vector<ofVec2f>> clusters;
 	for(auto p: points){
@@ -254,7 +286,7 @@ std::vector<ofVec2f> ofxURG::getPoints(float minDistance){
 	return ret;
 }
 
-std::vector<ofxURG::Data> ofxURG::getDataRaw(){
+std::vector<ofxURG::Step> ofxURG::getDataRaw(){
 	std::lock_guard<std::mutex> lock(mutex);
 	return dataExchange;
 }
@@ -284,6 +316,10 @@ void ofxURG::setRoi(ofPolyline poly){
 	unlock();
 }
 
+void ofxURG::clearRoi() {
+	roi.clear();
+}
+
 std::vector<ofVec2f> ofxURG::getRoiPoints(){
 	std::vector<ofVec2f> pts;
 	for(auto p: getRoi()){
@@ -295,6 +331,19 @@ std::vector<ofVec2f> ofxURG::getRoiPoints(){
 ofPolyline ofxURG::getRoi(){
 	std::lock_guard<std::mutex> lock(mutex);
 	return roi;
+}
+
+void ofxURG::calibrateMask(float tolerance) {
+	ofLogNotice("calibrating mask points from steps snapshot...");
+	std::vector<Step> maskSteps = getDataRaw();
+	for (auto s: maskSteps) {
+		maskPoints.push_back(s.getPosition());
+	}
+	maskTolerance = tolerance;
+}
+
+std::vector<ofVec2f> ofxURG::getMaskPoints() {
+	return maskPoints;
 }
 
 float ofxURG::getDrawScale(){

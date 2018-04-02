@@ -9,7 +9,7 @@ extern "C"{
 
 class ofxURG: private ofThread{
 public:
-	class Data{
+	class Step{
 	public:
 		ofVec2f getPosition(){
 			float rad = ofDegToRad(degrees);
@@ -40,23 +40,28 @@ public:
 
 	int getStepSize();
 
-	void drawRadius();
+	void drawRadius(ofColor rawColor = ofColor::darkGrey, ofColor filteredColor = ofColor::mediumBlue);
+	void drawPoints(std::vector<ofVec2f> point, float pointSize=10.0f, ofColor pointColor = ofColor::crimson, bool positionLabels=true);
 
-	std::vector<Data> getData();
-	std::vector<ofVec2f> getPoints(float minDistance=0.f);
-	std::vector<Data> getDataRaw();
+	std::vector<Step> getDataFiltered();
+	std::vector<ofVec2f> getPoints(float pointSeparationDistance=0.0f);
+	std::vector<Step> getDataRaw();
 
 	void setRoi(ofRectangle rect);
 	void setRoi(ofVec2f a, ofVec2f b, ofVec2f c, ofVec2f d);
 	void setRoi(std::vector<ofVec2f> points);
 	void setRoi(ofPolyline poly);
+	void clearRoi();
 
 	std::vector<ofVec2f> getRoiPoints();
 	ofPolyline getRoi();
 
+	void calibrateMask(float tolerance=50.0f);
+	std::vector<ofVec2f> getMaskPoints();
+
 	float getDrawScale();
 
-	ofEvent<std::vector<Data>> onNewDataThread;
+	ofEvent<std::vector<Step>> onNewDataThread;
 
 	float getDrawZoom() const;
 	void setDrawZoom(float value);
@@ -67,9 +72,9 @@ private:
 
 	void update(ofEventArgs& args);
 
-	void drawDataRadial(const std::vector<Data>& data);
+	void drawDataRadial(const std::vector<Step>& data);
 
-	void newDataThread(std::vector<Data>& data);
+	void newDataThread(std::vector<Step>& data);
 	void threadedFunction() override;
 
 	void readSensorCapabilities();
@@ -77,8 +82,12 @@ private:
 	bool checkError(int ret);
 
 	std::vector<long> dataRaw;
-	std::vector<Data> dataThread;
-	std::vector<Data> dataExchange;
+	std::vector<Step> dataThread;
+	std::vector<Step> dataExchange;
+	std::vector<ofVec2f> maskPoints;
+
+	bool passesMask(ofVec2f p);
+	float maskTolerance;
 
 	bool bNewData;
 
